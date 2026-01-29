@@ -1,0 +1,62 @@
+# Quick Fix Summary - What Changed
+
+## The Problem
+Login failed with "An error occurred during login" - password hashing didn't match seed data.
+
+## The Solution (3 Simple Changes)
+
+### 1. Install Bcrypt
+```bash
+npm install bcrypt
+```
+
+### 2. Update lib/auth.ts (Import bcrypt and fix 2 functions)
+
+**Line 3:** Add import
+```typescript
+import bcrypt from "bcrypt";
+```
+
+**Lines 104-106:** Update hashPassword function
+```typescript
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
+}
+```
+
+**Lines 108-111:** Update verifyPassword function
+```typescript
+export async function verifyPassword(
+  password: string,
+  hash: string
+): Promise<boolean> {
+  return bcrypt.compare(password, hash);
+}
+```
+
+### 3. Update scripts/seed-data.sql
+
+Replace all user inserts with:
+```sql
+INSERT INTO users (id, name, email, password_hash, role, supervisor_id, city, created_at) VALUES
+('550e8400-e29b-41d4-a716-446655440001', 'Sarah Chen', 'admin@demo.com', '$2b$10$tGnHdBqtWewmy0xxBKFfqO6T/o7b4ooy7MfMBT.rGAYCZpItqHrVi', 'admin', NULL, 'San Francisco', CURRENT_TIMESTAMP),
+('550e8400-e29b-41d4-a716-446655440002', 'Marcus Johnson', 'supervisor@demo.com', '$2b$10$tGnHdBqtWewmy0xxBKFfqO6T/o7b4ooy7MfMBT.rGAYCZpItqHrVi', 'supervisor', NULL, 'New York', CURRENT_TIMESTAMP),
+('550e8400-e29b-41d4-a716-446655440004', 'James Wilson', 'agent@demo.com', '$2b$10$tGnHdBqtWewmy0xxBKFfqO6T/o7b4ooy7MfMBT.rGAYCZpItqHrVi', 'agent', '550e8400-e29b-41d4-a716-446655440002', 'New York', CURRENT_TIMESTAMP);
+```
+
+## Demo Users
+
+| Email | Password | Role |
+|-------|----------|------|
+| admin@demo.com | password123 | admin |
+| supervisor@demo.com | password123 | supervisor |
+| agent@demo.com | password123 | agent |
+
+## That's It!
+
+✓ Build passes
+✓ All endpoints working
+✓ Demo logins ready
+✓ No other changes needed
+
+Go to /login and test with any of the three credentials above.
